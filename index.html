@@ -195,6 +195,7 @@
       border: 2px solid rgba(16, 185, 129, 0.3);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(16, 185, 129, 0.15);
       overflow: hidden;
+      touch-action: none;
     }
 
     canvas {
@@ -223,12 +224,15 @@
       z-index: 10;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0s linear 0.25s;
     }
 
     .game-overlay.active {
       opacity: 1;
       pointer-events: all;
+      visibility: visible;
+      transition: opacity 0.25s ease, visibility 0s;
     }
 
     .overlay-title {
@@ -576,18 +580,18 @@
     <!-- Settings Controls -->
     <div class="settings-panel">
       <div class="settings-group">
-        <span class="settings-label">Dificultad:</span>
-        <div class="toggle-group" id="difficultyGroup">
-          <button class="toggle-opt" data-speed="135">Fácil</button>
-          <button class="toggle-opt selected" data-speed="100">Normal</button>
-          <button class="toggle-opt" data-speed="70">Difícil</button>
+        <span class="settings-label" id="difficultyLabel">Dificultad:</span>
+        <div class="toggle-group" id="difficultyGroup" role="group" aria-labelledby="difficultyLabel">
+          <button class="toggle-opt" data-speed="135" aria-pressed="false">Fácil</button>
+          <button class="toggle-opt selected" data-speed="100" aria-pressed="true">Normal</button>
+          <button class="toggle-opt" data-speed="70" aria-pressed="false">Difícil</button>
         </div>
       </div>
       <div class="settings-group">
-        <span class="settings-label">Paredes:</span>
-        <div class="toggle-group" id="wallsGroup">
-          <button class="toggle-opt selected" data-walls="solid">Sólidas</button>
-          <button class="toggle-opt" data-walls="wrap">Túnel</button>
+        <span class="settings-label" id="wallsLabel">Paredes:</span>
+        <div class="toggle-group" id="wallsGroup" role="group" aria-labelledby="wallsLabel">
+          <button class="toggle-opt selected" data-walls="solid" aria-pressed="true">Sólidas</button>
+          <button class="toggle-opt" data-walls="wrap" aria-pressed="false">Túnel</button>
         </div>
       </div>
     </div>
@@ -834,7 +838,25 @@
       let applesCount = 0;
       let baseSpeed = 100; // ms per tick
       let wallMode = 'solid'; // 'solid' or 'wrap'
-      let highScore = parseInt(localStorage.getItem('juanpa_arcade_snake_highscore') || '0', 10);
+
+      const HS_KEY = 'juanpa_arcade_snake_highscore';
+      function loadHighScore() {
+        try {
+          const raw = localStorage.getItem(HS_KEY);
+          const val = parseInt(raw || '0', 10);
+          return Number.isFinite(val) && val > 0 ? val : 0;
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      function saveHighScore(val) {
+        try {
+          localStorage.setItem(HS_KEY, String(val));
+        } catch (e) {}
+      }
+
+      let highScore = loadHighScore();
       let isNewRecord = false;
 
       let lastTickTime = 0;
@@ -900,9 +922,7 @@
       }
 
       function spawnFood() {
-        const occupied = new Set();
-        snake.forEach(seg => occupied.add(`${seg.x},${seg.y}`));
-        if (goldenFood) occupied.add(`${goldenFood.x},${goldenFood.y}`);
+        const occupied = getOccupiedMap();
 
         const freeCells = [];
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -914,7 +934,6 @@
         }
 
         if (freeCells.length === 0) {
-          gameWin();
           return null;
         }
 
@@ -957,6 +976,7 @@
         applesCount = 0;
         isNewRecord = false;
         goldenFood = null;
+        normalFood = null;
         goldenFoodSpawnCounter = 0;
         particles = [];
 
@@ -1053,11 +1073,15 @@
           if (score > highScore) {
             highScore = score;
             isNewRecord = true;
-            localStorage.setItem('juanpa_arcade_snake_highscore', highScore);
+            saveHighScore(highScore);
           }
           updateScoreUI();
 
           normalFood = spawnFood();
+          if (!normalFood) {
+            gameWin();
+            return;
+          }
           maybeSpawnGoldenFood();
         } 
         // Check if eaten golden food
@@ -1070,7 +1094,7 @@
           if (score > highScore) {
             highScore = score;
             isNewRecord = true;
-            localStorage.setItem('juanpa_arcade_snake_highscore', highScore);
+            saveHighScore(highScore);
           }
           updateScoreUI();
 
@@ -1481,8 +1505,12 @@
       // Difficulty buttons
       difficultyGroup.querySelectorAll('.toggle-opt').forEach(btn => {
         btn.addEventListener('click', () => {
-          difficultyGroup.querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('selected'));
+          difficultyGroup.querySelectorAll('.toggle-opt').forEach(b => {
+            b.classList.remove('selected');
+            b.setAttribute('aria-pressed', 'false');
+          });
           btn.classList.add('selected');
+          btn.setAttribute('aria-pressed', 'true');
           baseSpeed = parseInt(btn.dataset.speed, 10);
         });
       });
@@ -1490,8 +1518,12 @@
       // Wall Mode buttons
       wallsGroup.querySelectorAll('.toggle-opt').forEach(btn => {
         btn.addEventListener('click', () => {
-          wallsGroup.querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('selected'));
+          wallsGroup.querySelectorAll('.toggle-opt').forEach(b => {
+            b.classList.remove('selected');
+            b.setAttribute('aria-pressed', 'false');
+          });
           btn.classList.add('selected');
+          btn.setAttribute('aria-pressed', 'true');
           wallMode = btn.dataset.walls;
         });
       });
