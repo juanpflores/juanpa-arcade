@@ -12,6 +12,7 @@ Una reimplementación moderna y pulida del legendario juego Snake, autocontenida
 - **Gráficos Cyberpunk / Neón**: Estética retro-futurista, ojos dinámicos en la cabeza de la serpiente orientados en la dirección del movimiento, y efectos de partículas de neón.
 - **Sintetizador de Audio Web Audio API**: Efectos de sonido generados por código (comer manzana, manzana dorada, choque, inicio de partida) sin dependencias ni archivos `.mp3`/`.wav` externos.
 - **Frutas Especiales**: Manzanas doradas temporales con temporizador visual que otorgan +50 puntos.
+- **🐰💣 Conejos Bomba (Obstáculos Dinámicos)**: Peligrosos conejos cibernéticos con mecha chispeante que aparecen a medida que avanzas en el juego. Chocar con uno provoca una explosión con vibración de pantalla (*screen shake*), sonido de detonación y partículas de fuego. Se pueden activar o desactivar desde el panel de opciones.
 - **Selector de Dificultad**: Fácil, Normal y Difícil (con aumento progresivo de velocidad según el puntaje).
 - **Modos de Pared**: Paredes sólidas clásicas o modo túnel (wrap-around).
 - **Prevención de Suicidio Accidental**: Cola de direcciones inteligente con buffer para evitar giros imposibles en ráfagas rápidas de teclas.
